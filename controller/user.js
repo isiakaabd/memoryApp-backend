@@ -1,40 +1,48 @@
 import User from '../model/userSchema.js'
 import jwt from 'jsonwebtoken'
-import bcryptjs from 'bcryptjs'
 import 'dotenv/config'
 import {
-  getToken,
   encryptPassword,
   comparePassword,
+  getToken,
 } from '../Utilities/getToken.js'
+import Post from '../model/postsSchema.js'
 export const signup = async (req, res) => {
-  const { email, password } = req.body
+  const { email, password, firstname, lastname } = req.body
   try {
     const oldUser = await User.findOne({ email })
     if (oldUser) {
       return res.status(409).send('User Already Exist. Please Login')
     }
-    const encryptedPassword = encryptPassword(password)
-    const newUser = await User.create({
-      email,
-      password: encryptedPassword,
-    })
-    res.status(201).json(newUser)
+    if (password.length >= 5) {
+      const encryptedPassword = await encryptPassword(password)
+      const newUser = await User.create({
+        email,
+        password: encryptedPassword,
+        firstname,
+        lastname,
+      })
+      newUser.password = undefined
+      res.status(201).json(newUser)
+    } else {
+      res.status(400).json({
+        message: 'Password too short',
+      })
+    }
   } catch (error) {
     res.status(400).json({ message: error.message })
   }
-  res.send('welcome')
 }
-export const createUser = (req, res) => {
+export const createUser = (_, res) => {
   res.send('welcome ')
 }
-export const loginUser = (req, res) => {
+export const loginUser = (_, res) => {
   res.send('Welcome  to Memory App')
 }
 const generateAccessToken = (user) => {
   const { _id, email } = user
   const token = jwt.sign({ id: _id, email }, process.env.TOKEN_KEY, {
-    expiresIn: '1h',
+    expiresIn: '24d',
   })
   return token
 }
@@ -45,10 +53,12 @@ const generateRefreshToken = (user) => {
 }
 
 let refreshTokens = []
+
 export const login = async (req, res) => {
   const { email, password } = req.body
   try {
     const user = await User.findOne({ email })
+
     if (!user) return res.status(404).json({ message: 'invalid email' })
     const decryptPassword = await comparePassword(password, user.password)
     if (user && decryptPassword) {
@@ -57,19 +67,19 @@ export const login = async (req, res) => {
       refreshTokens.push(refreshToken)
       user.token = token
       user.refreshToken = refreshToken
+      user.password = undefined
       return res.status(200).json(user)
     } else {
       return res.status(404).json({ message: 'invalid password' })
     }
   } catch (err) {
-    res.status(404).json({ message: 'invalid email/password' })
+    res.status(404).json({ message: err.message })
   }
 }
 
 export const refreshToken = (req, res) => {
   const refreshToken = req.body.token
 
-  //   const token = getToken(req)
   if (!refreshToken)
     return res.status(401).json({ message: 'You are not authenticated' })
   if (!refreshTokens.includes(refreshToken))
@@ -96,7 +106,7 @@ export const logout = (req, res) => {
 }
 export const editPassword = async (req, res) => {
   // const token = getToken(req)
-  const { id, email } = req.user
+  const { email } = req.user
   const { password, confirmPassword } = req.body
   if (!password || password.length < 5)
     return res
@@ -115,5 +125,18 @@ export const editPassword = async (req, res) => {
     } catch (error) {
       res.status(404).json({ message: error.message })
     }
+  }
+}
+
+export const deleteUser = async (req, res) => {
+  const { id } = req.user
+  try {
+    const refreshToken = await getToken(req)
+    await Post.findOneAndDelete({ userId: id })
+    await User.findByIdAndDelete(id)
+    refreshTokens = refreshTokens.filter((token) => token !== refreshToken)
+    res.status(200).json({ message: 'user successfully deleted' })
+  } catch (err) {
+    res.status(400).json({ message: err.message })
   }
 }

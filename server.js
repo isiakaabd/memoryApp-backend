@@ -10,8 +10,8 @@ const app = express()
 const port = process.env.PORT || 8000
 app.use(cors())
 app.use(bodyParser.json({ limit: '30mb', extended: true }))
-app.use('/post', router)
 app.use('/', authrouter)
+app.use('/post', router)
 app.use((_, res, next) => {
   res.header('Access-Control-Allow-Origin', '*')
   res.header(

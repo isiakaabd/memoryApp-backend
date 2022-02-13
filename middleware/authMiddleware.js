@@ -5,7 +5,7 @@ import { getToken } from '../Utilities/getToken.js'
 export const verifyToken = (req, res, next) => {
   const token = getToken(req)
   if (!token) {
-    return res.status(403).send(' authentication required')
+    return res.status(403).send('authentication required')
   }
   try {
     const decoded = jwt.verify(token, process.env.TOKEN_KEY)

@@ -6,7 +6,8 @@ import {
   login,
   logout,
   refreshToken,
-  editPassword
+  editPassword,
+  deleteUser,
 } from '../controller/user.js'
 import { verifyToken } from '../middleware/authMiddleware.js'
 const authrouter = express.Router()
@@ -18,8 +19,8 @@ authrouter.post('/logout', verifyToken, logout)
 
 authrouter.get('/login', loginUser)
 authrouter.post('/login', login)
-authrouter.post('/refreshtoken',verifyToken, refreshToken)
-authrouter.post("/editpassword",verifyToken, editPassword)
-
+authrouter.post('/refreshtoken', verifyToken, refreshToken)
+authrouter.post('/editpassword', verifyToken, editPassword)
+authrouter.delete('/deleteuser', verifyToken, deleteUser)
 
 export default authrouter

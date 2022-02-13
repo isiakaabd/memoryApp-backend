@@ -2,19 +2,13 @@ import mongoose from 'mongoose'
 
 const UserSchema = mongoose.Schema(
   {
-    firstname: { type: String },
-    lastname: { type: String },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, minlength: 5, required: true },
+    firstname: { type: String, default: '' },
+    lastname: { type: String, default: '' },
+    email: { type: String, required: true, trim: true, unique: true },
+    password: { type: String, minlength: 5, trim: true, required: true },
     token: { type: String },
     refreshToken: { type: String },
     image: String,
-    // posts: [
-    //   {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: 'Posts',
-    //   },
-    // ],
   },
   { timestamps: true },
 )
