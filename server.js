@@ -12,6 +12,9 @@ app.use(cors())
 app.use(bodyParser.json({ limit: '30mb', extended: true }))
 app.use('/', authrouter)
 app.use('/post', router)
+app.use('/', (_, res) => {
+  res.send('<h2> Welcome to MEMORIES')
+})
 app.use((_, res, next) => {
   res.header('Access-Control-Allow-Origin', '*')
   res.header(
