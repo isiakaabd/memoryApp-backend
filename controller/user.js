@@ -48,7 +48,9 @@ const generateAccessToken = (user) => {
 }
 const generateRefreshToken = (user) => {
   const { _id, email } = user
-  const token = jwt.sign({ id: _id, email }, process.env.REFRESH_TOKEN_KEY)
+  const token = jwt.sign({ id: _id, email }, process.env.REFRESH_TOKEN_KEY, {
+    expiresIn: '24d',
+  })
   return token
 }
 
@@ -78,7 +80,7 @@ export const login = async (req, res) => {
 }
 
 export const refreshToken = (req, res) => {
-  const refreshToken = req.body.token
+  const refreshToken = req.body.refreshtoken
 
   if (!refreshToken)
     return res.status(401).json({ message: 'You are not authenticated' })
@@ -86,8 +88,9 @@ export const refreshToken = (req, res) => {
     return res.status(403).json({ message: 'refresh token is not valid' })
 
   jwt.verify(refreshToken, process.env.REFRESH_TOKEN_KEY, (err, user) => {
-    err && console.log(err)
-    refreshTokens = refreshTokens.filter((token) => token !== refreshToken)
+    // console.log(user)
+    // err && console.log(err)
+    // refreshTokens = refreshTokens.filter((token) => token !== refreshToken)
     const newAccessToken = generateAccessToken(user)
     const newRefreshToken = generateRefreshToken(user)
     refreshTokens.push(newRefreshToken)
