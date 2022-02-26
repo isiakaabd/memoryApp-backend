@@ -19,7 +19,7 @@ authrouter.post('/logout', verifyToken, logout)
 
 authrouter.get('/login', loginUser)
 authrouter.post('/login', login)
-authrouter.post('/refreshtoken', verifyToken, refreshToken)
+authrouter.get('/refreshtoken', verifyToken, refreshToken)
 authrouter.post('/editpassword', verifyToken, editPassword)
 authrouter.delete('/deleteuser', verifyToken, deleteUser)
 
