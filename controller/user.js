@@ -1,6 +1,7 @@
 import User from '../model/userSchema.js'
 import jwt from 'jsonwebtoken'
 import 'dotenv/config'
+
 import {
   encryptPassword,
   comparePassword,
@@ -51,10 +52,9 @@ const generateRefreshToken = (user) => {
   const token = jwt.sign({ id: _id, email }, process.env.REFRESH_TOKEN_KEY, {
     expiresIn: '24d',
   })
+
   return token
 }
-
-let refreshTokens = []
 
 export const login = async (req, res) => {
   const { email, password } = req.body
@@ -66,10 +66,14 @@ export const login = async (req, res) => {
     if (user && decryptPassword) {
       const token = generateAccessToken(user)
       const refreshToken = generateRefreshToken(user)
-      refreshTokens.push(refreshToken)
+
       user.token = token
-      user.refreshToken = refreshToken
       user.password = undefined
+      res.cookie('jwt', refreshToken, {
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000,
+        secure: true,
+      })
       return res.status(200).json(user)
     } else {
       return res.status(404).json({ message: 'invalid password' })
@@ -80,35 +84,36 @@ export const login = async (req, res) => {
 }
 
 export const refreshToken = (req, res) => {
-  const refreshToken = req.body.refreshtoken
+  const cookies = req.cookies
+  const refreshToken = cookies.jwt
 
-  if (!refreshToken)
+  if (!cookies?.jwt)
     return res.status(401).json({ message: 'You are not authenticated' })
-  if (!refreshTokens.includes(refreshToken))
-    return res.status(403).json({ message: 'refresh token is not valid' })
-
-  jwt.verify(refreshToken, process.env.REFRESH_TOKEN_KEY, (err, user) => {
-    // console.log(user)
-    // err && console.log(err)
-    // refreshTokens = refreshTokens.filter((token) => token !== refreshToken)
-    const newAccessToken = generateAccessToken(user)
-    const newRefreshToken = generateRefreshToken(user)
-    refreshTokens.push(newRefreshToken)
-
-    res.status(200).json({
-      accessToken: newAccessToken,
-      refreshToken: newRefreshToken,
+  else {
+    jwt.verify(refreshToken, process.env.REFRESH_TOKEN_KEY, (err, user) => {
+      if (err) return res.sendStatus(403)
+      const newAccessToken = generateAccessToken(user)
+      res.status(200).json({
+        accessToken: newAccessToken,
+      })
     })
-  })
+  }
 }
-
 export const logout = (req, res) => {
-  const refreshToken = req.body.token
-  refreshTokens = refreshTokens.filter((token) => token !== refreshToken)
-  res.status(200).json({ message: 'Logout successful' })
+  const token = req.cookies
+  const jwt = token.jwt
+  if (!jwt) return res.sendStatus(204)
+  else {
+    res.clearCookie('jwt', {
+      httpOnly: true,
+      secure: true,
+    })
+    return res.status(200).json({
+      message: 'User logout successful',
+    })
+  }
 }
 export const editPassword = async (req, res) => {
-  // const token = getToken(req)
   const { email } = req.user
   const { password, confirmPassword } = req.body
   if (!password || password.length < 5)
@@ -133,12 +138,21 @@ export const editPassword = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
   const { id } = req.user
+  const token = req.cookies
+  const jwt = token.jwt
   try {
-    const refreshToken = await getToken(req)
-    await Post.findOneAndDelete({ userId: id })
-    await User.findByIdAndDelete(id)
-    refreshTokens = refreshTokens.filter((token) => token !== refreshToken)
-    res.status(200).json({ message: 'user successfully deleted' })
+    if (jwt) {
+      await Post.findOneAndDelete({ userId: id })
+      await User.findByIdAndDelete(id)
+      res.clearCookie('jwt', {
+        httpOnly: true,
+        secure: true,
+      })
+
+      res.status(200).json({ message: 'user successfully deleted' })
+    } else {
+      res.sendStatus(204)
+    }
   } catch (err) {
     res.status(400).json({ message: err.message })
   }
