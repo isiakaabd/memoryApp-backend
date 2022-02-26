@@ -6,10 +6,16 @@ import 'dotenv/config'
 import router from './routes/posts.js'
 import authrouter from './routes/user.js'
 import cookiesParser from 'cookie-parser'
+import { getUrl } from './Utilities/geturl.js'
 
 const app = express()
 const port = process.env.PORT || 8000
-app.use(cors())
+app.use(
+  cors({
+    origin: getUrl(),
+    credentials: true,
+  }),
+)
 app.use(bodyParser.json({ limit: '30mb', extended: true }))
 app.use(cookiesParser())
 app.use('/', authrouter)

@@ -1,13 +1,10 @@
 import User from '../model/userSchema.js'
 import jwt from 'jsonwebtoken'
 import 'dotenv/config'
-
-import {
-  encryptPassword,
-  comparePassword,
-  getToken,
-} from '../Utilities/getToken.js'
+import Cookies from 'universal-cookie'
+import { encryptPassword, comparePassword } from '../Utilities/getToken.js'
 import Post from '../model/postsSchema.js'
+const cookies = new Cookies()
 export const signup = async (req, res) => {
   const { email, password, firstname, lastname } = req.body
   try {
@@ -43,14 +40,14 @@ export const loginUser = (_, res) => {
 const generateAccessToken = (user) => {
   const { _id, email } = user
   const token = jwt.sign({ id: _id, email }, process.env.TOKEN_KEY, {
-    expiresIn: '24d',
+    expiresIn: '1d',
   })
   return token
 }
 const generateRefreshToken = (user) => {
   const { _id, email } = user
   const token = jwt.sign({ id: _id, email }, process.env.REFRESH_TOKEN_KEY, {
-    expiresIn: '24d',
+    expiresIn: '1d',
   })
 
   return token
@@ -72,8 +69,9 @@ export const login = async (req, res) => {
       res.cookie('jwt', refreshToken, {
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000,
-        secure: true,
+        // secure: true,
       })
+      cookies.set()
       return res.status(200).json(user)
     } else {
       return res.status(404).json({ message: 'invalid password' })
@@ -106,7 +104,7 @@ export const logout = (req, res) => {
   else {
     res.clearCookie('jwt', {
       httpOnly: true,
-      secure: true,
+      // secure: true,
     })
     return res.status(200).json({
       message: 'User logout successful',
