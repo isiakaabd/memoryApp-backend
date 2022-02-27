@@ -6,24 +6,24 @@ import 'dotenv/config'
 import router from './routes/posts.js'
 import authrouter from './routes/user.js'
 import cookiesParser from 'cookie-parser'
-import { getUrl } from './Utilities/geturl.js'
 
 const app = express()
 const port = process.env.PORT || 8000
 app.use(
   cors({
     credentials: true,
-    origin: true,
+    origin: ['http://localhost:3000', 'https://remlad-memory-app.netlify.app'],
   }),
 )
 app.use(bodyParser.json({ limit: '30mb', extended: true }))
 app.use(cookiesParser())
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin)
+  res.header('Access-Control-Allow-Origin', '*')
   res.header(
     'Access-Control-Allow-Headers',
     'Origin, X-Requested-With, Content-Type, Accept',
   )
+  res.header('Access-Control-Allow-Credentials', true)
 
   next()
 })
