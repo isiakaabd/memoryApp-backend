@@ -6,30 +6,31 @@ import 'dotenv/config'
 import router from './routes/posts.js'
 import authrouter from './routes/user.js'
 import cookiesParser from 'cookie-parser'
-import { getUrl } from './Utilities/geturl.js'
 
 const app = express()
 const port = process.env.PORT || 8000
 app.use(
   cors({
-    origin: 'https://remlad-memories.herokuapp.com',
     credentials: true,
+    origin: true,
   }),
 )
 app.use(bodyParser.json({ limit: '30mb', extended: true }))
 app.use(cookiesParser())
-app.use('/', authrouter)
-app.use('/post', router)
-app.use('/', (_, res) => {
-  res.send('<h2> Welcome to MEMORIES </h2>')
-})
-app.use((_, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*')
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin)
   res.header(
     'Access-Control-Allow-Headers',
     'Origin, X-Requested-With, Content-Type, Accept',
   )
+
   next()
+})
+
+app.use('/', authrouter)
+app.use('/post', router)
+app.use('/', (_, res) => {
+  res.send('<h2> Welcome to MEMORIES </h2>')
 })
 
 app.use(bodyParser.urlencoded({ limit: '30mb', extended: true }))
