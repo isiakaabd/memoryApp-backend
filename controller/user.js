@@ -1,10 +1,9 @@
 import User from '../model/userSchema.js'
 import jwt from 'jsonwebtoken'
 import 'dotenv/config'
-import Cookies from 'universal-cookie'
 import { encryptPassword, comparePassword } from '../Utilities/getToken.js'
 import Post from '../model/postsSchema.js'
-const cookies = new Cookies()
+
 export const signup = async (req, res) => {
   const { email, password, firstname, lastname } = req.body
   try {
@@ -72,7 +71,6 @@ export const login = async (req, res) => {
         sameSite: 'strict',
         secure: true,
       })
-      cookies.set()
       return res.status(200).json(user)
     } else {
       return res.status(404).json({ message: 'invalid password' })
