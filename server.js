@@ -17,7 +17,7 @@ app.use(
 )
 app.use(bodyParser.json({ limit: '30mb', extended: true }))
 app.use(cookiesParser())
-app.use((req, res, next) => {
+app.use((_, res, next) => {
   res.header('Access-Control-Allow-Origin', '*')
   res.header(
     'Access-Control-Allow-Headers',
