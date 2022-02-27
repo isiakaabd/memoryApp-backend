@@ -6,6 +6,7 @@ import 'dotenv/config'
 import router from './routes/posts.js'
 import authrouter from './routes/user.js'
 import cookiesParser from 'cookie-parser'
+import { getUrl } from './Utilities/geturl.js'
 
 const app = express()
 const port = process.env.PORT || 8000
@@ -18,7 +19,7 @@ app.use(
 app.use(bodyParser.json({ limit: '30mb', extended: true }))
 app.use(cookiesParser())
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', true)
+  res.header('Access-Control-Allow-Origin', req.headers.origin)
   res.header(
     'Access-Control-Allow-Headers',
     'Origin, X-Requested-With, Content-Type, Accept',
